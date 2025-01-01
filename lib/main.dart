@@ -16,7 +16,7 @@ class AmidaApp extends StatelessWidget {
         appBar: AppBar(
           title: const Text('あみだくじ'),
         ),
-        body: const AmidaScreen(columns: 10),
+        body: const AmidaScreen(columns: 20),
       ),
     );
   }
@@ -73,8 +73,8 @@ class _AmidaScreenState extends State<AmidaScreen> {
       child: Padding(
         padding: const EdgeInsets.all(8),
         child: CustomPaint(
-          size: const Size(1000, 500),
           painter: AmidaPainter(horizontalLines: _horizontalLines),
+          size: const Size(1250, 500),
         ),
       ),
     );
