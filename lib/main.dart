@@ -1,4 +1,5 @@
 import 'package:amidakuji_app/amidakuji_utils.dart';
+import 'package:amidakuji_app/model/participant.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -32,11 +33,19 @@ class AmidaScreen extends StatefulWidget {
 
 class _AmidaScreenState extends State<AmidaScreen> {
   late List<HorizontalLine> _horizontalLines;
+  late List<Participant> nameList;
 
   @override
   void initState() {
     super.initState();
     _horizontalLines = _generateRandomHorizontalLines(widget.columns);
+    nameList = List.generate(
+      widget.columns,
+      (_) => const Participant(
+        firstName: '太郎',
+        lastName: '山田',
+      ),
+    ).toList();
   }
 
   List<HorizontalLine> _generateRandomHorizontalLines(int columns) {
@@ -73,8 +82,11 @@ class _AmidaScreenState extends State<AmidaScreen> {
       child: Padding(
         padding: const EdgeInsets.all(8),
         child: CustomPaint(
-          painter: AmidaPainter(horizontalLines: _horizontalLines),
           size: const Size(1250, 500),
+          painter: AmidaPainter(
+            horizontalLines: _horizontalLines,
+            nameList: nameList,
+          ),
         ),
       ),
     );
@@ -94,9 +106,13 @@ class HorizontalLine {
 }
 
 class AmidaPainter extends CustomPainter {
-  AmidaPainter({required this.horizontalLines});
+  AmidaPainter({
+    required this.horizontalLines,
+    required this.nameList,
+  });
 
   final List<HorizontalLine> horizontalLines;
+  final List<Participant> nameList;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -112,6 +128,28 @@ class AmidaPainter extends CustomPainter {
     for (var i = 0; i < horizontalLines.length + 1; i++) {
       final x = i * columnSpacing;
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
+
+      // 各縦線の上に名前を描画
+      final textPainter = TextPainter(
+        text: TextSpan(
+          children: [
+            TextSpan(text: '${nameList[i].lastName}\n'),
+            TextSpan(text: nameList[i].firstName),
+          ],
+          style: const TextStyle(
+            color: Colors.black,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      )..layout();
+
+      final textOffset = Offset(
+        x - textPainter.width / 2, // 中央揃え
+        -textPainter.height - 5, // 縦線の上に少し余白を加える
+      );
+      textPainter.paint(canvas, textOffset);
     }
 
     // 横線を引く
