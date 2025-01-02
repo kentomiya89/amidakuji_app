@@ -1,4 +1,5 @@
 import 'package:amidakuji_app/amidakuji_utils.dart';
+import 'package:amidakuji_app/model/amida_lottery.dart';
 import 'package:amidakuji_app/model/participant.dart';
 import 'package:flutter/material.dart';
 
@@ -34,11 +35,14 @@ class AmidaScreen extends StatefulWidget {
 class _AmidaScreenState extends State<AmidaScreen> {
   late List<HorizontalLine> _horizontalLines;
   late List<Participant> nameList;
+  late List<AmidaLottery> lotteryList;
 
   @override
   void initState() {
     super.initState();
     _horizontalLines = _generateRandomHorizontalLines(widget.columns);
+
+    // デモデータ
     nameList = List.generate(
       widget.columns,
       (_) => const Participant(
@@ -46,6 +50,13 @@ class _AmidaScreenState extends State<AmidaScreen> {
         lastName: '山田',
       ),
     ).toList();
+
+    lotteryList = [
+      // 当たりは2つだけ
+      AmidaLottery.win,
+      AmidaLottery.win,
+      ...List.generate(widget.columns - 2, (_) => AmidaLottery.lose),
+    ]..shuffle();
   }
 
   List<HorizontalLine> _generateRandomHorizontalLines(int columns) {
@@ -86,6 +97,7 @@ class _AmidaScreenState extends State<AmidaScreen> {
           painter: AmidaPainter(
             horizontalLines: _horizontalLines,
             nameList: nameList,
+            lotteryList: lotteryList,
           ),
         ),
       ),
@@ -109,10 +121,12 @@ class AmidaPainter extends CustomPainter {
   AmidaPainter({
     required this.horizontalLines,
     required this.nameList,
+    required this.lotteryList,
   });
 
   final List<HorizontalLine> horizontalLines;
   final List<Participant> nameList;
+  final List<AmidaLottery> lotteryList;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -123,14 +137,14 @@ class AmidaPainter extends CustomPainter {
 
     const double columnSpacing = 60;
 
-    // 縦線を端から端まで引く
-    // 縦線は横線の+1の数分必要
     for (var i = 0; i < horizontalLines.length + 1; i++) {
+      // 縦線を端から端まで引く
+      // 縦線は横線の+1の数分必要
       final x = i * columnSpacing;
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
 
       // 各縦線の上に名前を描画
-      final textPainter = TextPainter(
+      final nameTextPainter = TextPainter(
         text: TextSpan(
           children: [
             TextSpan(text: '${nameList[i].lastName}\n'),
@@ -145,11 +159,33 @@ class AmidaPainter extends CustomPainter {
         textDirection: TextDirection.ltr,
       )..layout();
 
-      final textOffset = Offset(
-        x - textPainter.width / 2, // 中央揃え
-        -textPainter.height - 5, // 縦線の上に少し余白を加える
+      final nameOffset = Offset(
+        x - nameTextPainter.width / 2, // 中央揃え
+        -nameTextPainter.height - 5, // 縦線の上に少し余白を加える
       );
-      textPainter.paint(canvas, textOffset);
+      nameTextPainter.paint(canvas, nameOffset);
+
+      // 各縦線の下に当たりを描画
+      if (lotteryList[i] == AmidaLottery.win) {
+        final lotteryTextPainter = TextPainter(
+          text: const TextSpan(
+            text: '当たり',
+            style: TextStyle(
+              color: Colors.black,
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          textDirection: TextDirection.ltr,
+        )..layout();
+
+        final lotteryOffset = Offset(
+          x - lotteryTextPainter.width / 2, // 中央揃え
+          size.height + 5, // 縦線の下に少し余白を加える
+        );
+
+        lotteryTextPainter.paint(canvas, lotteryOffset);
+      }
     }
 
     // 横線を引く
