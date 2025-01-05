@@ -45,6 +45,8 @@ class _AmidaScreenState extends State<AmidaScreen> {
   late List<AmidaLottery> lotteryList;
   List<List<Offset>> _winningLinePaths = [];
 
+  bool isShowButton = true;
+
   @override
   void initState() {
     super.initState();
@@ -179,10 +181,17 @@ class _AmidaScreenState extends State<AmidaScreen> {
           ),
         ),
         const SizedBox(height: 30),
-        ElevatedButton(
-          onPressed: _calculateWinningLinePaths,
-          child: const Text('当選者を確定させる'),
-        ),
+        if (isShowButton)
+          ElevatedButton(
+            onPressed: () {
+              _calculateWinningLinePaths();
+              setState(() {
+                // ボタンを非表示にする
+                isShowButton = false;
+              });
+            },
+            child: const Text('当選者を確定させる'),
+          ),
       ],
     );
   }
@@ -297,7 +306,7 @@ class AmidaPainter extends CustomPainter {
         canvas.drawLine(redLinePath[i], redLinePath[i + 1], redPaint);
       }
 
-      // 2人目の当選者
+      // 2人目の当選者をオレンジ色で塗っていく
       final orangePaint = Paint()
         ..color = Colors.orange
         ..strokeWidth = 4
