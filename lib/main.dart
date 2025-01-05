@@ -39,7 +39,8 @@ class AmidaScreen extends StatefulWidget {
   State<AmidaScreen> createState() => _AmidaScreenState();
 }
 
-class _AmidaScreenState extends State<AmidaScreen> {
+class _AmidaScreenState extends State<AmidaScreen>
+    with SingleTickerProviderStateMixin {
   late List<HorizontalLine> _horizontalLines;
   late List<Participant> nameList;
   late List<AmidaLottery> lotteryList;
@@ -47,10 +48,24 @@ class _AmidaScreenState extends State<AmidaScreen> {
 
   bool isShowButton = true;
 
+  late AnimationController _animationController;
+  late Animation<double> _animation;
+
   @override
   void initState() {
     super.initState();
     _horizontalLines = _generateRandomHorizontalLines(widget.columns);
+
+    // アニメーションの設定
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 6), // アニメーションの持続時間
+    );
+
+    _animation = CurvedAnimation(
+      parent: _animationController,
+      curve: Curves.easeInOut,
+    );
 
     // デモデータ
     nameList = List.generate(
@@ -67,6 +82,12 @@ class _AmidaScreenState extends State<AmidaScreen> {
       AmidaLottery.win,
       ...List.generate(widget.columns - 2, (_) => AmidaLottery.lose),
     ]..shuffle();
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   List<HorizontalLine> _generateRandomHorizontalLines(int columns) {
@@ -95,6 +116,11 @@ class _AmidaScreenState extends State<AmidaScreen> {
     }
 
     return horizontalLinesList;
+  }
+
+  void _startAnimation() {
+    _calculateWinningLinePaths();
+    _animationController.forward();
   }
 
   void _calculateWinningLinePaths() {
@@ -176,21 +202,27 @@ class _AmidaScreenState extends State<AmidaScreen> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(8),
-                    child: CustomPaint(
-                      size: const Size(_kCanvasWidth, _kCanvasHeight),
-                      painter: AmidaPainter(
-                        horizontalLines: _horizontalLines,
-                        nameList: nameList,
-                        lotteryList: lotteryList,
-                        winningLinePaths: _winningLinePaths,
-                      ),
+                    child: AnimatedBuilder(
+                      animation: _animation,
+                      builder: (context, child) {
+                        return CustomPaint(
+                          size: const Size(_kCanvasWidth, _kCanvasHeight),
+                          painter: AmidaPainter(
+                            horizontalLines: _horizontalLines,
+                            nameList: nameList,
+                            lotteryList: lotteryList,
+                            winningLinePaths: _winningLinePaths,
+                            animationProgress: _animation.value,
+                          ),
+                        );
+                      },
                     ),
                   ),
                   const SizedBox(height: 30),
                   if (isShowButton)
                     ElevatedButton(
                       onPressed: () {
-                        _calculateWinningLinePaths();
+                        _startAnimation();
                         setState(() {
                           // ボタンを非表示にする
                           isShowButton = false;
@@ -226,12 +258,14 @@ class AmidaPainter extends CustomPainter {
     required this.nameList,
     required this.lotteryList,
     required this.winningLinePaths,
+    required this.animationProgress,
   });
 
   final List<HorizontalLine> horizontalLines;
   final List<Participant> nameList;
   final List<AmidaLottery> lotteryList;
   final List<List<Offset>> winningLinePaths;
+  final double animationProgress;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -309,24 +343,56 @@ class AmidaPainter extends CustomPainter {
       // 1人目の当選者を赤色で塗っていく
       final redPaint = Paint()
         ..color = Colors.red
-        ..strokeWidth = 4
+        ..strokeWidth = 10
         ..style = PaintingStyle.stroke;
 
       final redLinePath = winningLinePaths.first;
       for (var i = 0; i < redLinePath.length - 1; i++) {
-        canvas.drawLine(redLinePath[i], redLinePath[i + 1], redPaint);
+        final start = redLinePath[i];
+        final end = redLinePath[i + 1];
+
+        // アニメーションの進行度に基づき描画
+        final progress = (i + 1) / redLinePath.length;
+        if (animationProgress >= progress) {
+          canvas.drawLine(start, end, redPaint);
+        } else if (animationProgress >= i / redLinePath.length) {
+          final t =
+              (animationProgress - i / redLinePath.length) * redLinePath.length;
+          final partialEnd = Offset(
+            start.dx + (end.dx - start.dx) * t,
+            start.dy + (end.dy - start.dy) * t, // 縦方向の補間を進行方向として維持
+          );
+          canvas.drawLine(start, partialEnd, redPaint);
+          break;
+        }
       }
 
       // 2人目の当選者をオレンジ色で塗っていく
       final orangePaint = Paint()
         ..color = Colors.orange
-        ..strokeWidth = 4
+        ..strokeWidth = 10
         ..style = PaintingStyle.stroke;
 
       final orangeLinePath = winningLinePaths.last;
 
       for (var i = 0; i < orangeLinePath.length - 1; i++) {
-        canvas.drawLine(orangeLinePath[i], orangeLinePath[i + 1], orangePaint);
+        final start = orangeLinePath[i];
+        final end = orangeLinePath[i + 1];
+
+        // アニメーションの進行度に基づき描画
+        final progress = (i + 1) / orangeLinePath.length;
+        if (animationProgress >= progress) {
+          canvas.drawLine(start, end, orangePaint);
+        } else if (animationProgress >= i / orangeLinePath.length) {
+          final t = (animationProgress - i / orangeLinePath.length) *
+              orangeLinePath.length;
+          final partialEnd = Offset(
+            start.dx + (end.dx - start.dx) * t,
+            start.dy + (end.dy - start.dy) * t, // 縦方向の補間を進行方向として維持
+          );
+          canvas.drawLine(start, partialEnd, orangePaint);
+          break;
+        }
       }
     }
   }
