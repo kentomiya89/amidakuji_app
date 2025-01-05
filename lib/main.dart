@@ -24,6 +24,13 @@ class AmidaApp extends StatelessWidget {
   }
 }
 
+// あみだのスペース
+const double _kColumnSpacing = 60;
+
+// キャンバスのサイズ
+const double _kCanvasWidth = 1250;
+const double _kCanvasHeight = 500;
+
 class AmidaScreen extends StatefulWidget {
   const AmidaScreen({required this.columns, super.key});
   final int columns;
@@ -36,6 +43,7 @@ class _AmidaScreenState extends State<AmidaScreen> {
   late List<HorizontalLine> _horizontalLines;
   late List<Participant> nameList;
   late List<AmidaLottery> lotteryList;
+  List<List<Offset>> _winningLinePaths = [];
 
   @override
   void initState() {
@@ -87,20 +95,95 @@ class _AmidaScreenState extends State<AmidaScreen> {
     return horizontalLinesList;
   }
 
+  void _calculateWinningLinePaths() {
+    final paths = <List<Offset>>[];
+
+    // "当たり"の列を探す
+    final winningIndices = [
+      for (var i = 0; i < lotteryList.length; i++)
+        if (lotteryList[i] == AmidaLottery.win) i,
+    ];
+
+    for (final winningIndex in winningIndices) {
+      final path = <Offset>[];
+
+      // 開始点（"当たり"の位置から上方向に進む）
+      var currentX = winningIndex * _kColumnSpacing;
+      var currentY = _kCanvasHeight;
+      path.add(Offset(currentX, currentY));
+
+      // 最後に処理した横線のY座標を記録して、同じ高さの横線を再度処理しないようにする
+      double? lastProcessedY;
+
+      while (currentY > 0) {
+        // 現在の位置から上方向にある最も近い横線を探す
+        final availableLines = _horizontalLines.where((line) {
+          final lineY = line.yPositionFactor * _kCanvasHeight;
+          return lineY < currentY && // 現在位置より上にある
+              (lastProcessedY == null ||
+                  lineY != lastProcessedY) && // まだ処理していない高さ
+              (line.startColomn * _kColumnSpacing == currentX ||
+                  line.endColumn * _kColumnSpacing == currentX); // 現在の列に接続している
+        }).toList()
+          ..sort(
+            // Y座標でソートして最も近い（大きい）ものを選択
+            (a, b) => (b.yPositionFactor * _kCanvasHeight)
+                .compareTo(a.yPositionFactor * _kCanvasHeight),
+          );
+
+        if (availableLines.isNotEmpty) {
+          final nextLine = availableLines.first;
+          currentY = nextLine.yPositionFactor * _kCanvasHeight;
+          path.add(Offset(currentX, currentY));
+
+          // 横線を渡る
+          currentX = (nextLine.startColomn * _kColumnSpacing == currentX)
+              ? nextLine.endColumn * _kColumnSpacing
+              : nextLine.startColomn * _kColumnSpacing;
+          path.add(Offset(currentX, currentY));
+
+          // 処理した高さを記録
+          lastProcessedY = currentY;
+        } else {
+          // 横線がない場合は上に進む
+          currentY = 0;
+          path.add(Offset(currentX, currentY));
+        }
+      }
+
+      paths.add(path);
+    }
+
+    setState(() {
+      _winningLinePaths = paths;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(8),
-        child: CustomPaint(
-          size: const Size(1250, 500),
-          painter: AmidaPainter(
-            horizontalLines: _horizontalLines,
-            nameList: nameList,
-            lotteryList: lotteryList,
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Center(
+          child: Padding(
+            padding: const EdgeInsets.all(8),
+            child: CustomPaint(
+              size: const Size(_kCanvasWidth, _kCanvasHeight),
+              painter: AmidaPainter(
+                horizontalLines: _horizontalLines,
+                nameList: nameList,
+                lotteryList: lotteryList,
+                winningLinePaths: _winningLinePaths,
+              ),
+            ),
           ),
         ),
-      ),
+        const SizedBox(height: 30),
+        ElevatedButton(
+          onPressed: _calculateWinningLinePaths,
+          child: const Text('当選者を確定させる'),
+        ),
+      ],
     );
   }
 }
@@ -122,11 +205,13 @@ class AmidaPainter extends CustomPainter {
     required this.horizontalLines,
     required this.nameList,
     required this.lotteryList,
+    required this.winningLinePaths,
   });
 
   final List<HorizontalLine> horizontalLines;
   final List<Participant> nameList;
   final List<AmidaLottery> lotteryList;
+  final List<List<Offset>> winningLinePaths;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -135,12 +220,9 @@ class AmidaPainter extends CustomPainter {
       ..strokeWidth = 4
       ..style = PaintingStyle.stroke;
 
-    const double columnSpacing = 60;
-
     for (var i = 0; i < horizontalLines.length + 1; i++) {
       // 縦線を端から端まで引く
-      // 縦線は横線の+1の数分必要
-      final x = i * columnSpacing;
+      final x = i * _kColumnSpacing;
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
 
       // 各縦線の上に名前を描画
@@ -194,16 +276,43 @@ class AmidaPainter extends CustomPainter {
       final endColumn = line.endColumn;
       final yFactor = line.yPositionFactor;
 
-      final startX = startColumn * columnSpacing;
-      final endX = endColumn * columnSpacing;
+      final startX = startColumn * _kColumnSpacing;
+      final endX = endColumn * _kColumnSpacing;
       final y = size.height * yFactor;
 
       canvas.drawLine(Offset(startX, y), Offset(endX, y), paint);
+    }
+
+    // 当たりの線を描画
+    // 当選者は2つのみ
+    if (winningLinePaths.isNotEmpty && winningLinePaths.length == 2) {
+      // 1人目の当選者を赤色で塗っていく
+      final redPaint = Paint()
+        ..color = Colors.red
+        ..strokeWidth = 4
+        ..style = PaintingStyle.stroke;
+
+      final redLinePath = winningLinePaths.first;
+      for (var i = 0; i < redLinePath.length - 1; i++) {
+        canvas.drawLine(redLinePath[i], redLinePath[i + 1], redPaint);
+      }
+
+      // 2人目の当選者
+      final orangePaint = Paint()
+        ..color = Colors.orange
+        ..strokeWidth = 4
+        ..style = PaintingStyle.stroke;
+
+      final orangeLinePath = winningLinePaths.last;
+
+      for (var i = 0; i < orangeLinePath.length - 1; i++) {
+        canvas.drawLine(orangeLinePath[i], orangeLinePath[i + 1], orangePaint);
+      }
     }
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) {
-    return false;
+    return true;
   }
 }
