@@ -163,36 +163,47 @@ class _AmidaScreenState extends State<AmidaScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Center(
-          child: Padding(
-            padding: const EdgeInsets.all(8),
-            child: CustomPaint(
-              size: const Size(_kCanvasWidth, _kCanvasHeight),
-              painter: AmidaPainter(
-                horizontalLines: _horizontalLines,
-                nameList: nameList,
-                lotteryList: lotteryList,
-                winningLinePaths: _winningLinePaths,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                minHeight: constraints.maxHeight + 150, // 調整値
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(8),
+                    child: CustomPaint(
+                      size: const Size(_kCanvasWidth, _kCanvasHeight),
+                      painter: AmidaPainter(
+                        horizontalLines: _horizontalLines,
+                        nameList: nameList,
+                        lotteryList: lotteryList,
+                        winningLinePaths: _winningLinePaths,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 30),
+                  if (isShowButton)
+                    ElevatedButton(
+                      onPressed: () {
+                        _calculateWinningLinePaths();
+                        setState(() {
+                          // ボタンを非表示にする
+                          isShowButton = false;
+                        });
+                      },
+                      child: const Text('当選者を確定させる'),
+                    ),
+                ],
               ),
             ),
           ),
-        ),
-        const SizedBox(height: 30),
-        if (isShowButton)
-          ElevatedButton(
-            onPressed: () {
-              _calculateWinningLinePaths();
-              setState(() {
-                // ボタンを非表示にする
-                isShowButton = false;
-              });
-            },
-            child: const Text('当選者を確定させる'),
-          ),
-      ],
+        );
+      },
     );
   }
 }
