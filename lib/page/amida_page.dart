@@ -264,6 +264,7 @@ class AmidaPainter extends CustomPainter {
             fontWeight: FontWeight.bold,
           ),
         ),
+        textAlign: TextAlign.center,
         textDirection: TextDirection.ltr,
       )..layout();
 
