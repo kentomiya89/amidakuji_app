@@ -161,53 +161,55 @@ class _AmidaPageState extends State<AmidaPage>
 
   @override
   Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          child: Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: constraints.maxHeight + 150, // 調整値
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(8),
-                    child: AnimatedBuilder(
-                      animation: _animation,
-                      builder: (context, child) {
-                        return CustomPaint(
-                          size: const Size(_kCanvasWidth, _kCanvasHeight),
-                          painter: AmidaPainter(
-                            horizontalLines: _horizontalLines,
-                            nameList: widget.participantList,
-                            lotteryList: lotteryList,
-                            winningLinePaths: _winningLinePaths,
-                            animationProgress: _animation.value,
-                          ),
-                        );
-                      },
+    return Scaffold(
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          return SingleChildScrollView(
+            child: Center(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight: constraints.maxHeight + 150, // 調整値
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: AnimatedBuilder(
+                        animation: _animation,
+                        builder: (context, child) {
+                          return CustomPaint(
+                            size: const Size(_kCanvasWidth, _kCanvasHeight),
+                            painter: AmidaPainter(
+                              horizontalLines: _horizontalLines,
+                              nameList: widget.participantList,
+                              lotteryList: lotteryList,
+                              winningLinePaths: _winningLinePaths,
+                              animationProgress: _animation.value,
+                            ),
+                          );
+                        },
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 30),
-                  if (isShowButton)
-                    ElevatedButton(
-                      onPressed: () {
-                        _startAnimation();
-                        setState(() {
-                          // ボタンを非表示にする
-                          isShowButton = false;
-                        });
-                      },
-                      child: const Text('当選者を確定させる'),
-                    ),
-                ],
+                    const SizedBox(height: 30),
+                    if (isShowButton)
+                      ElevatedButton(
+                        onPressed: () {
+                          _startAnimation();
+                          setState(() {
+                            // ボタンを非表示にする
+                            isShowButton = false;
+                          });
+                        },
+                        child: const Text('当選者を確定させる'),
+                      ),
+                  ],
+                ),
               ),
             ),
-          ),
-        );
-      },
+          );
+        },
+      ),
     );
   }
 }
