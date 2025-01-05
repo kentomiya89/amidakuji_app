@@ -11,8 +11,8 @@ const double _kCanvasWidth = 1250;
 const double _kCanvasHeight = 500;
 
 class AmidaPage extends StatefulWidget {
-  const AmidaPage({required this.guestNameList, super.key});
-  final int guestNameList;
+  const AmidaPage({required this.participantList, super.key});
+  final List<Participant> participantList;
 
   @override
   State<AmidaPage> createState() => _AmidaPageState();
@@ -21,8 +21,16 @@ class AmidaPage extends StatefulWidget {
 class _AmidaPageState extends State<AmidaPage>
     with SingleTickerProviderStateMixin {
   late List<HorizontalLine> _horizontalLines;
-  late List<Participant> nameList;
-  late List<AmidaLottery> lotteryList;
+  late List<AmidaLottery> lotteryList = [
+    // 当たりは2つだけ
+    AmidaLottery.win,
+    AmidaLottery.win,
+    ...List.generate(
+      widget.participantList.length - 2,
+      (_) => AmidaLottery.lose,
+    ),
+  ]..shuffle();
+
   List<List<Offset>> _winningLinePaths = [];
 
   bool isShowButton = true;
@@ -33,7 +41,8 @@ class _AmidaPageState extends State<AmidaPage>
   @override
   void initState() {
     super.initState();
-    _horizontalLines = _generateRandomHorizontalLines(widget.guestNameList);
+    _horizontalLines =
+        _generateRandomHorizontalLines(widget.participantList.length);
 
     // アニメーションの設定
     _animationController = AnimationController(
@@ -45,22 +54,6 @@ class _AmidaPageState extends State<AmidaPage>
       parent: _animationController,
       curve: Curves.easeInOut,
     );
-
-    // デモデータ
-    nameList = List.generate(
-      widget.guestNameList,
-      (_) => const Participant(
-        firstName: '太郎',
-        lastName: '山田',
-      ),
-    ).toList();
-
-    lotteryList = [
-      // 当たりは2つだけ
-      AmidaLottery.win,
-      AmidaLottery.win,
-      ...List.generate(widget.guestNameList - 2, (_) => AmidaLottery.lose),
-    ]..shuffle();
   }
 
   @override
@@ -188,7 +181,7 @@ class _AmidaPageState extends State<AmidaPage>
                           size: const Size(_kCanvasWidth, _kCanvasHeight),
                           painter: AmidaPainter(
                             horizontalLines: _horizontalLines,
-                            nameList: nameList,
+                            nameList: widget.participantList,
                             lotteryList: lotteryList,
                             winningLinePaths: _winningLinePaths,
                             animationProgress: _animation.value,

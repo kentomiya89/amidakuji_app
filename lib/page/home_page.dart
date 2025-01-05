@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:amidakuji_app/model/participant.dart';
 import 'package:amidakuji_app/page/amida_page.dart';
 import 'package:csv/csv.dart';
 import 'package:file_picker/file_picker.dart';
@@ -41,22 +42,19 @@ class _HomePageState extends State<HomePage> {
     // シフトJISやEUC-JPで保存されている場合もUTF-8に変換して処理
     final csvString = utf8.decode(bytes, allowMalformed: true); // UTF-8に変換
     final csvTable = const CsvToListConverter().convert(csvString);
-    final csvNameList = csvTable.map((list) => list.first).toList();
 
-    if (csvNameList.isEmpty || !csvNameList.every((list) => list is String)) {
-      _showErrorSnackBar('ファイルの中身は指定の形式でお願いします 例 1行目 名前 田中太郎、鈴木太郎');
-      return;
-    }
+    final participantList = csvTable.sublist(1).map((list) {
+      final lastName = list.first as String;
+      final firstName = list.last as String;
 
-    const nameColumn = '名前';
-    final guestNameList =
-        csvNameList.where((name) => name != nameColumn).toList();
+      return Participant(firstName: firstName, lastName: lastName);
+    }).toList();
 
     if (mounted) {
       await Navigator.of(context).pushReplacement(
         PageRouteBuilder<void>(
           pageBuilder: (_, __, ___) =>
-              AmidaPage(guestNameList: guestNameList.length),
+              AmidaPage(participantList: participantList),
           transitionDuration: Duration.zero,
           reverseTransitionDuration: Duration.zero,
         ),
