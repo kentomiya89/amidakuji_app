@@ -201,7 +201,7 @@ class _AmidaPageState extends State<AmidaPage>
                             isShowButton = false;
                           });
                         },
-                        child: const Text('当選者を確定させる'),
+                        child: const Text('結果を発表！'),
                       ),
                   ],
                 ),
