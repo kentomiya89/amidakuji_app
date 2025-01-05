@@ -8,6 +8,8 @@ environment:
   sdk: ^3.6.0
 
 dependencies:
+  csv: ^6.0.0
+  file_picker: ^8.1.7
   flutter:
     sdk: flutter
 
