@@ -1,3 +1,4 @@
+import 'package:amidakuji_app/model/couple_role.dart';
 import 'package:amidakuji_app/model/participant.dart';
 import 'package:amidakuji_app/view/amida_body.dart';
 import 'package:amidakuji_app/view/data_upload_body.dart';
@@ -13,10 +14,10 @@ class HomePage extends StatelessWidget {
       child: Scaffold(
         appBar: AppBar(
           title: const Text('あみだくじ'),
-          bottom: const TabBar(
+          bottom: TabBar(
             tabs: [
-              Tab(text: '新郎'),
-              Tab(text: '新婦'),
+              Tab(text: CoupleRole.groom.roleName),
+              Tab(text: CoupleRole.bride.roleName),
             ],
           ),
         ),
