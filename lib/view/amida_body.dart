@@ -30,7 +30,7 @@ class AmidaBody extends StatefulWidget {
 
 class _AmidaBodyState extends State<AmidaBody>
     with SingleTickerProviderStateMixin {
-  late List<HorizontalLine> _horizontalLines;
+  List<HorizontalLine> _horizontalLines = [];
   late List<AmidaLottery> lotteryList = [
     // 当たりは2つだけ
     AmidaLottery.win,
@@ -40,14 +40,13 @@ class _AmidaBodyState extends State<AmidaBody>
       (_) => AmidaLottery.lose,
     ),
   ]..shuffle();
-
   List<List<Offset>> _winningLinePaths = [];
+  ui.Image? image;
 
   bool isShowButton = true;
 
   late AnimationController _animationController;
   late Animation<double> _animation;
-  ui.Image? image;
 
   @override
   void initState() {
