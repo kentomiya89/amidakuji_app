@@ -1,7 +1,11 @@
+import 'dart:async';
+import 'dart:ui' as ui;
 import 'package:amidakuji_app/amidakuji_utils.dart';
 import 'package:amidakuji_app/model/amida_lottery.dart';
 import 'package:amidakuji_app/model/participant.dart';
 import 'package:flutter/material.dart';
+
+import 'package:flutter/services.dart';
 
 // あみだのスペース
 const double _kColumnSpacing = 60;
@@ -11,7 +15,13 @@ const double _kCanvasWidth = 1250;
 const double _kCanvasHeight = 500;
 
 class AmidaBody extends StatefulWidget {
-  const AmidaBody({required this.participantList, super.key});
+  const AmidaBody({
+    required this.participantList,
+    required this.wininngImagePath,
+    super.key,
+  });
+
+  final String wininngImagePath;
   final List<Participant> participantList;
 
   @override
@@ -37,6 +47,7 @@ class _AmidaBodyState extends State<AmidaBody>
 
   late AnimationController _animationController;
   late Animation<double> _animation;
+  ui.Image? image;
 
   @override
   void initState() {
@@ -54,12 +65,26 @@ class _AmidaBodyState extends State<AmidaBody>
       parent: _animationController,
       curve: Curves.easeInOut,
     );
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final imageData = await _loadAssetImage(widget.wininngImagePath);
+      setState(() {
+        image = imageData;
+      });
+    });
   }
 
   @override
   void dispose() {
     _animationController.dispose();
     super.dispose();
+  }
+
+  Future<ui.Image> _loadAssetImage(String assetPath) async {
+    final data = await rootBundle.load(assetPath);
+    final completer = Completer<ui.Image>();
+    ui.decodeImageFromList(data.buffer.asUint8List(), completer.complete);
+    return completer.future;
   }
 
   List<HorizontalLine> _generateRandomHorizontalLines(int columns) {
@@ -185,13 +210,14 @@ class _AmidaBodyState extends State<AmidaBody>
                               nameList: widget.participantList,
                               lotteryList: lotteryList,
                               winningLinePaths: _winningLinePaths,
+                              image: image,
                               animationProgress: _animation.value,
                             ),
                           );
                         },
                       ),
                     ),
-                    const SizedBox(height: 30),
+                    const SizedBox(height: 60),
                     if (isShowButton)
                       ElevatedButton(
                         onPressed: () {
@@ -232,6 +258,7 @@ class AmidaPainter extends CustomPainter {
     required this.nameList,
     required this.lotteryList,
     required this.winningLinePaths,
+    required this.image,
     required this.animationProgress,
   });
 
@@ -239,10 +266,15 @@ class AmidaPainter extends CustomPainter {
   final List<Participant> nameList;
   final List<AmidaLottery> lotteryList;
   final List<List<Offset>> winningLinePaths;
+  final ui.Image? image;
   final double animationProgress;
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (image == null) {
+      return;
+    }
+
     final paint = Paint()
       ..color = Colors.brown
       ..strokeWidth = 4
@@ -276,26 +308,41 @@ class AmidaPainter extends CustomPainter {
       );
       nameTextPainter.paint(canvas, nameOffset);
 
-      // 各縦線の下に当たりを描画
+      // 各縦線の下に当たり画像を描画
       if (lotteryList[i] == AmidaLottery.win) {
-        final lotteryTextPainter = TextPainter(
-          text: const TextSpan(
-            text: '当たり',
-            style: TextStyle(
-              color: Colors.black,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          textDirection: TextDirection.ltr,
-        )..layout();
+        // 元画像の幅と高さ
+        final originalWidth = image!.width.toDouble();
+        final originalHeight = image!.height.toDouble();
+        final aspectRatio = originalWidth / originalHeight;
 
-        final lotteryOffset = Offset(
-          x - lotteryTextPainter.width / 2, // 中央揃え
-          size.height + 5, // 縦線の下に少し余白を加える
-        );
+        // 描画する画像の最大幅と高さ
+        const maxWidth = 50.0; // 最大幅（任意で変更）
+        const maxHeight = 50.0; // 最大高さ（任意で変更）
 
-        lotteryTextPainter.paint(canvas, lotteryOffset);
+        // アスペクト比を保った描画サイズを計算
+        late double drawWidth;
+        late double drawHeight;
+
+        if (aspectRatio > 1) {
+          // 横長の場合、幅を最大幅に合わせる
+          drawWidth = maxWidth;
+          drawHeight = maxWidth / aspectRatio;
+        } else {
+          // 縦長の場合、高さを最大高さに合わせる
+          drawHeight = maxHeight;
+          drawWidth = maxHeight * aspectRatio;
+        }
+
+        // 中央揃えになるよう位置を調整
+        final imageX = x - drawWidth / 2; // 中央揃え
+        final imageY = size.height + 5; // 縦線の下に少し余白を加える
+
+        // 描画先の範囲を設定
+        final dstRect = Rect.fromLTWH(imageX, imageY, drawWidth, drawHeight);
+        final srcRect = Rect.fromLTWH(0, 0, originalWidth, originalHeight);
+
+        // Canvas に画像を描画
+        canvas.drawImageRect(image!, srcRect, dstRect, Paint());
       }
     }
 

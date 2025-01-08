@@ -21,10 +21,10 @@ class HomePage extends StatelessWidget {
             ],
           ),
         ),
-        body: const TabBarView(
+        body: TabBarView(
           children: [
-            _HomeBody(),
-            _HomeBody(),
+            _HomeBody(wininngImagePath: CoupleRole.groom.winningImagePath),
+            _HomeBody(wininngImagePath: CoupleRole.bride.winningImagePath),
           ],
         ),
       ),
@@ -33,7 +33,9 @@ class HomePage extends StatelessWidget {
 }
 
 class _HomeBody extends StatefulWidget {
-  const _HomeBody();
+  const _HomeBody({required this.wininngImagePath});
+
+  final String wininngImagePath;
 
   @override
   State<_HomeBody> createState() => _HomeBodyState();
@@ -51,7 +53,10 @@ class _HomeBodyState extends State<_HomeBody>
   Widget build(BuildContext context) {
     super.build(context);
     return isUpload
-        ? AmidaBody(participantList: participantList)
+        ? AmidaBody(
+            participantList: participantList,
+            wininngImagePath: widget.wininngImagePath,
+          )
         : Padding(
             padding: const EdgeInsets.all(16),
             child: DataUploadBody(
