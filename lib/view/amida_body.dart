@@ -14,6 +14,9 @@ const double _kColumnSpacing = 60;
 const double _kCanvasWidth = 1250;
 const double _kCanvasHeight = 500;
 
+// カラムスペース間の横線の数のMAX値
+const int _kMaxHorizontalLinesPerColumn = 7;
+
 class AmidaBody extends StatefulWidget {
   const AmidaBody({
     required this.participantList,
@@ -91,23 +94,33 @@ class _AmidaBodyState extends State<AmidaBody>
     const max = 20;
 
     final horizontalLinesList = <HorizontalLine>[];
-
-    double? prevYPositionFactor;
+    final prevYPositionFactors = <double>{};
 
     for (var i = 0; i < columns - 1; i++) {
       late double newYPositionFactor;
+      final tempYPositionFactors = <double>{};
       do {
         newYPositionFactor = randomDecimalInRangeWithStep05(min, max);
-      } while (prevYPositionFactor == newYPositionFactor);
 
-      prevYPositionFactor = newYPositionFactor;
+        if (!prevYPositionFactors.contains(newYPositionFactor)) {
+          tempYPositionFactors.add(newYPositionFactor);
+        }
+      } while (tempYPositionFactors.length < _kMaxHorizontalLinesPerColumn);
 
-      horizontalLinesList.add(
-        HorizontalLine(
-          startColomn: i,
-          endColumn: i + 1,
-          yPositionFactor: newYPositionFactor,
-        ),
+      prevYPositionFactors
+        ..clear()
+        ..addAll(tempYPositionFactors);
+
+      horizontalLinesList.addAll(
+        tempYPositionFactors
+            .map(
+              (y) => HorizontalLine(
+                startColomn: i,
+                endColumn: i + 1,
+                yPositionFactor: y,
+              ),
+            )
+            .toList(),
       );
     }
 
@@ -279,7 +292,9 @@ class AmidaPainter extends CustomPainter {
       ..strokeWidth = 4
       ..style = PaintingStyle.stroke;
 
-    for (var i = 0; i < horizontalLines.length + 1; i++) {
+    for (var i = 0;
+        i < horizontalLines.length / _kMaxHorizontalLinesPerColumn + 1;
+        i++) {
       // 縦線を端から端まで引く
       final x = i * _kColumnSpacing;
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
