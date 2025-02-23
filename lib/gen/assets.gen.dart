@@ -10,7 +10,7 @@
 import 'package:flutter/widgets.dart';
 
 class Assets {
-  Assets._();
+  const Assets._();
 
   static const AssetGenImage beer = AssetGenImage('assets/beer.png');
   static const AssetGenImage chocolate = AssetGenImage('assets/chocolate.png');
@@ -52,7 +52,7 @@ class AssetGenImage {
     bool gaplessPlayback = true,
     bool isAntiAlias = false,
     String? package,
-    FilterQuality filterQuality = FilterQuality.low,
+    FilterQuality filterQuality = FilterQuality.medium,
     int? cacheWidth,
     int? cacheHeight,
   }) {
