@@ -6,7 +6,13 @@
       "Bash(git add:*)",
       "Bash(git push:*)",
       "Bash(git remote set-url:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git config:*)",
+      "Bash(brew install:*)",
+      "Bash(mv:*)",
+      "Bash(rmdir:*)",
+      "Bash(gh auth:*)",
+      "Bash(pkill:*)"
     ],
     "deny": [],
     "ask": []
