@@ -1,3 +1,12 @@
+# Branch Merge Workflow Instructions
+
+## 概要
+この PR は、特定ブランチへの PR マージ時に実行される GitHub Actions ワークフローの追加を目的としています。
+
+## ワークフロー内容
+以下の内容で `.github/workflows/branch-merge.yml` を作成してください：
+
+```yaml
 name: Branch Merge Workflow
 on:
   pull_request:
@@ -38,3 +47,12 @@ jobs:
           echo "Target branch (base_ref): ${{ github.base_ref }}"
           echo "Source branch (head_ref): ${{ github.head_ref }}"
           echo "PR was merged into: ${{ github.base_ref }}"
+```
+
+## 動作条件
+- feature-* ブランチから main ブランチへの PR がマージされた時のみ実行
+- 現在のブランチ情報を出力
+
+## 実装手順
+1. GitHub の Web UI で上記ワークフローファイルを作成
+2. または、適切な権限を持つトークンでプッシュ
