@@ -14,8 +14,8 @@ jobs:
       - name: Check should run
         id: check
         run: |
-          if [[ "${{ github.event.pull_request.merged }}" == "true" && \
-                "${{ startsWith(github.head_ref, 'feature-') }}" == "true" && \
+          if [[ "${{ github.event.pull_request.merged }}" && \
+                "${{ startsWith(github.head_ref, 'feature/') }}" && \
                 "${{ github.base_ref }}" == "main" ]]; then
             echo "should_run=true" >> $GITHUB_OUTPUT
           else
