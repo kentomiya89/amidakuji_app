@@ -34,6 +34,7 @@ jobs:
       
       - name: Show current branch
         run: |
+          git branch --show-current
           echo "Current branch: $(git branch --show-current)"
           echo "Target branch (base_ref): ${{ github.base_ref }}"
           echo "Source branch (head_ref): ${{ github.head_ref }}"
