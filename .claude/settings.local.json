@@ -1,7 +1,12 @@
 {
   "permissions": {
     "allow": [
-      "Bash(flutter:*)"
+      "Bash(flutter:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(git remote set-url:*)",
+      "Bash(git commit:*)"
     ],
     "deny": [],
     "ask": []
