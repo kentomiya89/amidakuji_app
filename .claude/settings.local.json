@@ -12,7 +12,8 @@
       "Bash(mv:*)",
       "Bash(rmdir:*)",
       "Bash(gh auth:*)",
-      "Bash(pkill:*)"
+      "Bash(pkill:*)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": [],
     "ask": []
