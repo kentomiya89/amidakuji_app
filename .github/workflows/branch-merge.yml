@@ -34,8 +34,8 @@ jobs:
       
       - name: Show current branch
         run: |
-          git branch --show-current
-          echo "Current branch: $(git branch --show-current)"
+          echo "Current branch: $(git rev-parse --abbrev-ref HEAD)"
+          echo "Current commit: $(git rev-parse HEAD)"
           echo "Target branch (base_ref): ${{ github.base_ref }}"
           echo "Source branch (head_ref): ${{ github.head_ref }}"
           echo "PR was merged into: ${{ github.base_ref }}"
