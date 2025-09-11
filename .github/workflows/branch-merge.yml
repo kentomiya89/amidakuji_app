@@ -34,8 +34,9 @@ jobs:
       
       - name: Show current branch
         run: |
-          echo "Current branch: $(git rev-parse --abbrev-ref HEAD)"
-          echo "Current commit: $(git rev-parse HEAD)"
-          echo "Target branch (base_ref): ${{ github.base_ref }}"
-          echo "Source branch (head_ref): ${{ github.head_ref }}"
-          echo "PR was merged into: ${{ github.base_ref }}"
+          echo "::notice::=== Branch Information ==="
+          echo "::notice::Current branch: $(git rev-parse --abbrev-ref HEAD)"
+          echo "::notice::Current commit: $(git rev-parse HEAD)"
+          echo "::notice::Target branch (base_ref): ${{ github.base_ref }}"
+          echo "::notice::Source branch (head_ref): ${{ github.head_ref }}"
+          echo "::notice::PR was merged into: ${{ github.base_ref }}"
